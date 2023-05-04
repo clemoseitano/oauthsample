@@ -1,0 +1,39 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+  rabbitmq:
+    image: rabbitmq:3.12-rc
+    container_name: 'rabbitmq'
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+      - rabbitmq_go_net
+  celery_tasks:
+    build: .
+    command: celery -A service beat -l INFO  --scheduler django_celery_beat.schedulers:DatabaseScheduler && celery -A service worker -l INFO
+    depends_on:
+      - rabbitmq
+      - db
+  db:
+    image: postgres:14
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - "POSTGRES_HOST_AUTH_METHOD=trust"
+networks:
+  rabbitmq_go_net:
+    driver: bridge
+volumes:
+  postgres_data:
