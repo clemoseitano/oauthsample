@@ -15,9 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+
 from oauthsample import views as api_views
 from oauthsample.views import ProductViewSet
-from rest_framework import renderers
 
 product_list = ProductViewSet.as_view({
     'get': 'list',
